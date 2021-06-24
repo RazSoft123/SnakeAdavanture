@@ -29,8 +29,8 @@ public class StartWindow extends JFrame implements Runnable {
 	private KeyboardInputs keyboard;
 	private Score score;
 	private Grasses grass;
-	private boolean willStart;
 	private Data data;
+	private MouseInputs mouse;
 
 	public StartWindow() {
 		keyboard = new KeyboardInputs();
@@ -39,6 +39,7 @@ public class StartWindow extends JFrame implements Runnable {
 		setSize(GameConstants.W_WIDTH + 30, GameConstants.W_Height + 50);
 		setResizable(true);
 		data = new Data();
+		mouse = new MouseInputs();
 	}
 
 	protected void createAndShowGUI() {
@@ -51,6 +52,11 @@ public class StartWindow extends JFrame implements Runnable {
 
 		// Taking keyboard inputs
 		drawableCanvas.addKeyListener(keyboard);
+		
+		//Taking mouse input
+		drawableCanvas.addMouseListener(mouse);
+		drawableCanvas.addMouseMotionListener(mouse);
+		
 		setIgnoreRepaint(true);
 		getContentPane().add(drawableCanvas);
 		getContentPane().setBackground(Color.BLACK);
@@ -150,9 +156,31 @@ public class StartWindow extends JFrame implements Runnable {
 					if (snake.getDirection() != GameConstants.RIGHT)
 						snake.setDirection(GameConstants.LEFT);
 				}
+		}else {
+			if(mouse.mouseGetClicked() && mouse.insideYesButton()) {
+				gameOver = false;
+				mouse.mouseSetClicked(false);
+				startAgain();
+			}
+			else if(mouse.mouseGetClicked() && mouse.insideNoButton()) {
+				getContentPane().remove(drawableCanvas);
+				mouse.mouseSetClicked(false);
+				repaint();
+				revalidate();
+				showMenu();
+			}
 		}
 	}
 
+	private void startAgain() {
+		snake.creatingSnake(GameConstants.W_WIDTH/2, GameConstants.W_Height/2);
+		snake.setDirection(GameConstants.RIGHT);
+		score = new Score();
+		level = data.getLevel();
+		food.createFood(snake, level);
+		gameOver = false;
+	}
+	
 	protected void processObjects(double timeDelta) {
 		if (!gameOver) {
 			level.guideSnake(snake);
@@ -198,6 +226,36 @@ public class StartWindow extends JFrame implements Runnable {
 			g.drawString("Score :  " + score.getScore(), GameConstants.W_WIDTH / 3 + 85,
 					GameConstants.W_Height / 3 + 85);
 			g.setFont(tempFont);
+			sleep(100);
+			g.setColor(Color.BLACK);
+			g.fillRect(0, 0, GameConstants.W_WIDTH, GameConstants.W_Height);
+			tempFont = tempFont.deriveFont((float)50.0);
+			g.setFont(tempFont);
+			g.setColor(Color.WHITE);
+			g.drawString("Play again !!", GameConstants.W_WIDTH/2 - 150, GameConstants.W_Height/2 - 30);
+			g.setColor(Color.RED);
+			g.fillRect(GameConstants.W_WIDTH/2 - 180, GameConstants.W_Height/2 + 20, 120, 60);
+			g.fillRect(GameConstants.W_WIDTH/2+30, GameConstants.W_Height/2 + 20, 120, 60);
+			
+			if(mouse.insideYesButton())
+				g.setColor(Color.GREEN);
+			else
+				g.setColor(Color.BLACK);
+			g.fillRect(GameConstants.W_WIDTH/2 - 175, GameConstants.W_Height/2 + 25, 110, 50);
+			
+			if(mouse.insideNoButton())
+				g.setColor(Color.GREEN);
+			else
+				g.setColor(Color.BLACK);
+			g.fillRect(GameConstants.W_WIDTH/2 + 35, GameConstants.W_Height/2 + 25, 110, 50);
+			
+			tempFont = tempFont.deriveFont((float)20.0);
+			g.setFont(tempFont);
+			g.setColor(Color.RED);
+			g.drawString("YES", GameConstants.W_WIDTH/2 - 140, GameConstants.W_Height/2 + 55 );
+			g.drawString("NO", GameConstants.W_WIDTH/2 + 75, GameConstants.W_Height/2 + 55 );
+			
+			
 		}
 	}
 
@@ -240,7 +298,7 @@ public class StartWindow extends JFrame implements Runnable {
 			} while (bs.contentsLost());
 			bs.show();
 		} while (bs.contentsRestored());
-		sleep(3000);
+		sleep(30);
 		getContentPane().remove(canvas);
 		repaint();
 	}
@@ -418,6 +476,19 @@ public class StartWindow extends JFrame implements Runnable {
 		exit.setSize(90, 30);
 		exit.setLocation(GameConstants.W_WIDTH / 2 - 30, GameConstants.W_Height / 3 + 120);
 		jpanel.add(exit);
+		
+		exit.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				running = false;
+				if(gameThread == null) {
+					System.exit(0);
+				}
+			}
+			
+		});
 
 		add(jpanel);
 		repaint();
